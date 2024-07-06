@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>player list(GET, DELETE)</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css
+    "rel="stylesheet" />
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js
+  "></script>
+<style>
+  #loading{
+    display: none;
+    color:green;
+    background-color: #BBE2EC;
+  }
+  li{
+    list-style: none;
+  }
+  #success{
+    display:none;
+    background-color: #D4E7C5;
+  }
+</style>
+  </head>
+  <body>
+    <header>
+      <nav class="navbar navbar-expand-lg bg-light">
+        <div class="container">
+      <a href="index.html" class="navbar-brand">ICC Player Management</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+          <ul class="navbar-nav">
+        <li><a class="nav-link" href="index.html">Home</a></li>
+        <li><a class="nav-link" href="player-list.html"> Players List</a></li>
+        <li><a class="nav-link" href="players.html">Add Players</a></li>
+    </ul>
+          </div>
+        </div>
+    </nav>
+    </header>
+
+    <main class="container mt-4">
+    <h1>Player List</h1>
+<div id="loading" class="form-control my-2">loading...</div>
+      <div id="success" class="form-control">Player deleted successfully</div>
+      <div class="mt-4">
+        <label for="role">Filter by Playing Role:</label><br/>
+        <select id="role" class="form-control">
+          <option value="all">All</option>
+          <option value="All-Rounder">All-rounder</option>
+          <option value="Batsman">Batsman</option>
+          <option value="Bowler">Bowler</option>
+        </select>
+      </div>
+<div id="playerList" class="row mt-4 mx-1"></div>
+      
+    </main>
+
+    <script>
+      const playerListContainer = document.querySelector("#playerList")
+      const loadingContainer = document.querySelector("#loading")
+      const apiUrl = 'https://players-backend-student-neog-ca.replit.app/players'
+const roleFilter = document.querySelector("#role")
+      const successContainer = document.querySelector("#success")
+
+      function playerData(){
+        loadingContainer.style.display="block"
+    fetch(apiUrl).then(response => response.json()).then((data)=>{
+    if(data){
+    renderPlayers(data)
+      deletePlayer()
+    }
+    }).catch((error)=>{
+   playerListContainer.textContent = "An error occured while fetching data"
+  })   
+      }
+
+     function renderPlayers(data){
+playerListContainer.innerHTML = ``
+       
+       loadingContainer.style.display="none"
+       for(let i =0;i < data.length; i++){
+         const liElement = document.createElement("li")
+         liElement.className = 'border p-3 '
+         liElement.innerHTML = `${data[i].fullName} - Playing Role: ${data[i].playingRole} - Nationality:${data[i].nationality} <button class="btn btn-danger float-end" data-id="${data[i]._id}" id="deleteBtn">Delete</button>`
+         playerListContainer.appendChild(liElement)
+       }
+     }
+
+      //delete functionality
+      function deletePlayer(){
+        const deleteBtns = document.querySelectorAll("#deleteBtn")
+        for(i = 0; i < deleteBtns.length; i++){
+          deleteBtns[i].addEventListener("click",(event)=>{
+          let  playerId = event.target.getAttribute("data-id")
+
+            fetch(`${apiUrl}/${playerId}`,{
+              method:"DELETE",
+            }).then((response)=> response.json()).then((data)=>{
+              successContainer.style.display = "block"
+           playerData()
+              setTimeout(()=>{
+                successContainer.style.display = "none"
+              },1000)
+            })
+            
+          })
+        }
+      }
+
+      //filter 
+     function filterbyRole(){
+        playerListContainer.innerHTML = ``
+        let selectedRole = roleFilter.value
+      const filteredPlayer = []
+      if(selectedRole === "all"){
+       playerData()
+       } else {
+        fetch(apiUrl).then(response => response.json()).then((data)=>{
+          for(let i = 0; i < data.length; i++){
+        if(data[i].playingRole == selectedRole){
+        filteredPlayer.push(data[i])
+        }
+          }
+          renderPlayers(filteredPlayer)
+        })
+       }
+      }
+      roleFilter.addEventListener("change",filterbyRole)
+      
+      playerData()
+    </script>
+  </body>
+</html>
